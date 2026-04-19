@@ -173,7 +173,7 @@ mlartifacts/
 .dvc/cache/
 
 # Git LFS
-*.gitattributes
+!.gitattributes
 
 # Large files (if using Git LFS)
 *.zip
