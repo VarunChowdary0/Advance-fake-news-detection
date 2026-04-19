@@ -15,7 +15,7 @@ with open("./datasets/tokens/tokenizer.pkl", "rb") as f:
 
 # Load model
 model = tf.keras.models.load_model(
-    "./models/fake_news_bilstm_attention_v1_0.h5",
+    "./models/fake_news_bilstm_attention.h5",
     custom_objects={"Attention": Attention},
     compile=False
 )
@@ -30,7 +30,9 @@ def visualize_attention(text, tokenizer, max_len):
     seq = tokenizer.texts_to_sequences([text])
     padded = tf.keras.preprocessing.sequence.pad_sequences(seq, maxlen=max_len)
     
-    attention_scores = extract_attention.predict(padded)[0]
+    # Attention layer returns (context, attention_weights)
+    context, attention_scores = extract_attention.predict(padded)
+    attention_scores = attention_scores.squeeze(-1)[0]  # shape: (seq_len,)
 
     tokens = text.split()[:max_len]
     values = np.abs(attention_scores[:len(tokens)])
@@ -43,7 +45,7 @@ def visualize_attention(text, tokenizer, max_len):
     print("[SAVED] attention_visualization.png")
 
 # ---- SAMPLE TEST ----
-sample_text = "Breaking: Trump claims election was rigged without evidence."
+sample_text = "Breaking: Example news headline to test attention weights."
 max_len = 400
 
 visualize_attention(sample_text, tokenizer, max_len)

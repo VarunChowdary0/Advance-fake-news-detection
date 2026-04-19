@@ -5,7 +5,20 @@ from lime.lime_text import LimeTextExplainer
 import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from layers.attention import Attention
+# from layers.attention import Attention
+from tools.preprocess import clean_text
+import tensorflow as tf
+
+class Attention(tf.keras.layers.Layer):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+    def call(self, inputs):
+        # inputs: (batch, time, features)
+        score = tf.nn.tanh(inputs)             # (batch, time, features)
+        weights = tf.nn.softmax(score, axis=1) # normalize over time
+        context = tf.reduce_sum(weights * inputs, axis=1)  # (batch, features)
+        return context, weights
 # Load tokenizer
 with open("./datasets/tokens/tokenizer.pkl", "rb") as f:
     tokenizer = pickle.load(f)
@@ -31,7 +44,7 @@ explainer = LimeTextExplainer(class_names=class_names)
 
 # sample_text = "Breaking: Trump claims election was rigged without evidence."
 while True:
-    sample_text = input("Enter news: ")
+    sample_text = clean_text(input("Enter news: "))
     exp = explainer.explain_instance(
         sample_text, predict_proba, num_features=10, labels=[1]
     )
